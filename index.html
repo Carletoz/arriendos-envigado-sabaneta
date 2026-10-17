@@ -101,6 +101,10 @@
         select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--select-bg); color: var(--text); cursor: pointer; font-size: 0.9em; }
         .stats { background: var(--stats-bg); padding: 15px; border-radius: 6px; margin-bottom: 20px; }
         .stats span { margin-right: 20px; font-weight: 500; }
+        .sort-controls { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .sort-btn { border: 1px solid var(--border); background: var(--section-bg); color: var(--text); padding: 5px 10px; border-radius: 14px; cursor: pointer; font-size: 0.85em; font-weight: 500; }
+        .sort-btn:hover { opacity: 0.8; }
+        .sort-btn.active { background: var(--accent); color: var(--section-bg); border-color: var(--accent); }
         .small { font-size: 0.85em; color: var(--text-muted); }
         .tel { font-weight: 600; white-space: nowrap; }
         .tag { display: inline-block; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; margin-top: 4px; }
@@ -143,6 +147,12 @@
             <div class="stats">
                 <span>Total: 16 opciones</span>
                 <span>Agendadas: <strong id="count-agendadas-1">0</strong></span>
+                <span class="sort-controls">
+                    Ordenar por precio:
+                    <button class="sort-btn" id="sort-price-asc" type="button">↑ Menor a mayor</button>
+                    <button class="sort-btn" id="sort-price-desc" type="button">↓ Mayor a menor</button>
+                    <button class="sort-btn" id="sort-reset" type="button">Orden original</button>
+                </span>
             </div>
             <table>
                 <thead>
@@ -577,6 +587,54 @@
                 applyTheme(next);
                 try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
             });
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const tbody = document.getElementById('table-1');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Guarda el orden original y el precio numérico de cada fila
+            rows.forEach((row, index) => {
+                row.dataset.originalOrder = index;
+                const priceText = row.children[2].textContent;
+                const digits = priceText.replace(/[^0-9]/g, '');
+                row.dataset.price = digits ? parseInt(digits, 10) : 0;
+            });
+
+            const btnAsc = document.getElementById('sort-price-asc');
+            const btnDesc = document.getElementById('sort-price-desc');
+            const btnReset = document.getElementById('sort-reset');
+
+            function setActive(btn) {
+                [btnAsc, btnDesc, btnReset].forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+            }
+
+            function render(sorted) {
+                sorted.forEach(row => tbody.appendChild(row));
+            }
+
+            btnAsc.addEventListener('click', () => {
+                const sorted = [...rows].sort((a, b) => a.dataset.price - b.dataset.price);
+                render(sorted);
+                setActive(btnAsc);
+            });
+
+            btnDesc.addEventListener('click', () => {
+                const sorted = [...rows].sort((a, b) => b.dataset.price - a.dataset.price);
+                render(sorted);
+                setActive(btnDesc);
+            });
+
+            btnReset.addEventListener('click', () => {
+                const sorted = [...rows].sort((a, b) => a.dataset.originalOrder - b.dataset.originalOrder);
+                render(sorted);
+                setActive(btnReset);
+            });
+
+            setActive(btnReset);
         })();
     </script>
 
