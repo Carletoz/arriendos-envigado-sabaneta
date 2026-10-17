@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Búsqueda de arriendos – Envigado y Sabaneta</title>
+    <style>
+        :root {
+            --bg: #f5f5f5;
+            --text: #333;
+            --text-muted: #666;
+            --text-faint: #888;
+            --accent: #1a73e8;
+            --section-bg: #ffffff;
+            --section-shadow: rgba(0,0,0,0.1);
+            --section-border: #e8f0fe;
+            --th-bg: #f8f9fa;
+            --th-text: #202124;
+            --border: #dadce0;
+            --row-border: #e8eaed;
+            --row-hover: #f8f9fa;
+            --select-bg: #ffffff;
+            --stats-bg: #e8f0fe;
+            --tag-ok-bg: #e6f4ea;
+            --tag-ok-text: #137333;
+            --tag-warn-bg: #fef7e0;
+            --tag-warn-text: #b06000;
+            --note-bg: #fff8e1;
+            --note-border: #f9ab00;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #16181c;
+                --text: #e3e3e3;
+                --text-muted: #a0a0a0;
+                --text-faint: #8a8a8a;
+                --accent: #8ab4f8;
+                --section-bg: #1f2227;
+                --section-shadow: rgba(0,0,0,0.4);
+                --section-border: #2c313a;
+                --th-bg: #262a31;
+                --th-text: #e3e3e3;
+                --border: #3c4148;
+                --row-border: #2c313a;
+                --row-hover: #262a31;
+                --select-bg: #262a31;
+                --stats-bg: #26324a;
+                --tag-ok-bg: #16342a;
+                --tag-ok-text: #7ddba5;
+                --tag-warn-bg: #3a2f10;
+                --tag-warn-text: #f0c35d;
+                --note-bg: #3a2f10;
+                --note-border: #f9ab00;
+            }
+        }
+        :root[data-theme="dark"] {
+            --bg: #16181c;
+            --text: #e3e3e3;
+            --text-muted: #a0a0a0;
+            --text-faint: #8a8a8a;
+            --accent: #8ab4f8;
+            --section-bg: #1f2227;
+            --section-shadow: rgba(0,0,0,0.4);
+            --section-border: #2c313a;
+            --th-bg: #262a31;
+            --th-text: #e3e3e3;
+            --border: #3c4148;
+            --row-border: #2c313a;
+            --row-hover: #262a31;
+            --select-bg: #262a31;
+            --stats-bg: #26324a;
+            --tag-ok-bg: #16342a;
+            --tag-ok-text: #7ddba5;
+            --tag-warn-bg: #3a2f10;
+            --tag-warn-text: #f0c35d;
+            --note-bg: #3a2f10;
+            --note-border: #f9ab00;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: var(--text); background: var(--bg); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+        h1 { color: var(--accent); margin-bottom: 10px; }
+        .metadata { color: var(--text-muted); font-size: 0.9em; margin-bottom: 30px; }
+        .theme-toggle { border: 1px solid var(--border); background: var(--section-bg); color: var(--text); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.9em; white-space: nowrap; }
+        .theme-toggle:hover { opacity: 0.8; }
+        .section { background: var(--section-bg); border-radius: 8px; margin-bottom: 30px; padding: 20px; box-shadow: 0 1px 3px var(--section-shadow); overflow-x: auto; }
+        .section h2 { color: var(--accent); margin-bottom: 20px; border-bottom: 2px solid var(--section-border); padding-bottom: 10px; }
+        .section h3 { color: var(--text-muted); margin-top: 15px; margin-bottom: 10px; font-size: 1em; }
+        .section ul { margin-left: 20px; }
+        .section ol { margin-left: 20px; }
+        .section li { margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }
+        th { background: var(--th-bg); color: var(--th-text); padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--row-border); vertical-align: top; }
+        tr:hover { background: var(--row-hover); }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .checkbox { cursor: pointer; font-size: 1.2em; user-select: none; }
+        .checkbox:hover { opacity: 0.7; }
+        select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--select-bg); color: var(--text); cursor: pointer; font-size: 0.9em; }
+        .stats { background: var(--stats-bg); padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .stats span { margin-right: 20px; font-weight: 500; }
+        .small { font-size: 0.85em; color: var(--text-muted); }
+        .tel { font-weight: 600; white-space: nowrap; }
+        .tag { display: inline-block; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; margin-top: 4px; }
+        .tag-ok { background: var(--tag-ok-bg); color: var(--tag-ok-text); }
+        .tag-warn { background: var(--tag-warn-bg); color: var(--tag-warn-text); }
+        .note { background: var(--note-bg); border-left: 4px solid var(--note-border); padding: 12px 15px; border-radius: 4px; margin-bottom: 20px; font-size: 0.92em; }
+        .status-por-contactar { color: var(--text-faint); }
+        .status-contactado { color: #f57c00; }
+        .status-visita-agendada { color: #1976d2; }
+        .status-visitado { color: #00796b; }
+        .status-interesado { color: #7b1fa2; }
+        .status-descartado { color: #c62828; }
+        .status-ya-arrendado { color: #558b2f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <h1>🏠 Búsqueda de arriendos – Envigado y Sabaneta</h1>
+            <button class="theme-toggle" id="theme-toggle" type="button">🌙 Oscuro</button>
+        </div>
+        <div class="metadata">Fecha: 17 de octubre de 2026</div>
+
+        <div class="section">
+            <h2>Criterios de búsqueda</h2>
+            <ul>
+                <li><strong>Tipo:</strong> apartamento, sin amoblar</li>
+                <li><strong>Presupuesto:</strong> COP 2.000.000 – 2.200.000 al mes</li>
+                <li><strong>Alcobas:</strong> mínimo 2</li>
+                <li><strong>Baños:</strong> mínimo 1, preferible 2</li>
+                <li><strong>Ubicación:</strong> céntrica; sin lomas ni zonas lejos de Av. Las Vegas o Av. El Poblado</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📋 Mejores opciones (zona plana o céntrica)</h2>
+            <div class="note">
+                En Marketplace solo aparecieron 4 apartamentos adicionales (#13–16) que cumplen precio, alcobas y municipio (Sabaneta); no salió ninguno nuevo en Envigado dentro de ese rango. El área aparece en la publicación como "pies cuadrados", pero por los valores son m².
+            </div>
+            <div class="stats">
+                <span>Total: 16 opciones</span>
+                <span>Agendadas: <strong id="count-agendadas-1">0</strong></span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Municipio / zona</th>
+                        <th>Precio</th>
+                        <th>Alcobas / baños</th>
+                        <th>Área</th>
+                        <th>Detalles</th>
+                        <th>Teléfono / código</th>
+                        <th>Enlace</th>
+                        <th>Estado</th>
+                        <th>Agendado</th>
+                    </tr>
+                </thead>
+                <tbody id="table-1">
+                    <tr>
+                        <td>1</td>
+                        <td>Envigado – San Rafael</td>
+                        <td>$2.200.000</td>
+                        <td>3 / 2</td>
+                        <td>55 m²</td>
+                        <td>Parqueadero, portería 24 h, estrato 3</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2673589673075390/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="1">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="1">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Envigado – Barrio Obrero</td>
+                        <td>$2.200.000</td>
+                        <td>2 / 2</td>
+                        <td>60 m²</td>
+                        <td>Cocina semiintegral, zona de ropas</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1403022968706124/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="2">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="2">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Envigado – Torres de Santa Bárbara</td>
+                        <td>$2.100.000</td>
+                        <td>2 / 1</td>
+                        <td>n/d</td>
+                        <td>Cesión de contrato, disponible 26 oct</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2211588899386322/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="3">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="3">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Envigado – La Magnolia</td>
+                        <td>$2.100.000</td>
+                        <td>n/d</td>
+                        <td>n/d</td>
+                        <td>Ubicación muy central, Zona Plaza</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1429584252647739/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="4">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="4">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Envigado – Unidad Corazón, piso 4</td>
+                        <td>$2.000.000</td>
+                        <td>3 / 2</td>
+                        <td>n/d</td>
+                        <td>Ascensor, parqueaderos, balcón</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1567849374843418/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="5">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="5">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Envigado – Trianón</td>
+                        <td>$2.100.000</td>
+                        <td>2 / 2</td>
+                        <td>n/d</td>
+                        <td>Sector residencial tranquilo, 2 balcones</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1063704086510403/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="6">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="6">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Envigado – Mayorca y Viva</td>
+                        <td>$2.100.000</td>
+                        <td>3 / 2</td>
+                        <td>n/d</td>
+                        <td>Remodelado, vista panorámica, mascotas</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2589643031454008/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="7">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="7">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Sabaneta – Calle Larga</td>
+                        <td>$2.000.000</td>
+                        <td>2 / 2</td>
+                        <td>60 m²</td>
+                        <td>2 closets, cocina integral, balcón</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/3141402206260904/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="8">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="8">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Sabaneta – Calle Larga</td>
+                        <td>$2.100.000</td>
+                        <td>3 / 2</td>
+                        <td>n/d</td>
+                        <td>Ascensor, cocina integral, balcón</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1549694757204459/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="9">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="9">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Sabaneta – Cañaveralejo</td>
+                        <td>$2.150.000</td>
+                        <td>3 / 2</td>
+                        <td>58 m²</td>
+                        <td>Piso 23, ascensor, balcón</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2091249364849173/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="10">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="10">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Sabaneta – Cañaveralejo</td>
+                        <td>$2.100.000</td>
+                        <td>2 / 2</td>
+                        <td>55 m²</td>
+                        <td>Nuevo, 2 closets, parqueadero</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2266600370908798/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="11">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="11">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Sabaneta – Barrio Cerámica</td>
+                        <td>$2.200.000</td>
+                        <td>3 / 2</td>
+                        <td>58 m²</td>
+                        <td>Para estrenar, piso 5, cocina integral</td>
+                        <td><span class="small">Sin dato</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1753906989063128/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="12">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="12">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>Sabaneta – San José<br><span class="tag tag-ok">Céntrico · Cra. 45, a ~3 carreras de Av. Las Vegas</span><div class="small">Zona verificada en Maps (Urbanización San José, Cra. 45 #77 Sur)</div></td>
+                        <td>$1.970.000</td>
+                        <td>3 / 2</td>
+                        <td>n/d</td>
+                        <td>3 closets, cocina integral, zona de ropas, balcón, parqueadero. Unidad cerrada con vigilancia, ascensor, shut de basuras, parqueadero de visitantes, juegos infantiles. Publica Desarrollo Inmobiliario del Sur (Tatiana Velasquez).</td>
+                        <td><span class="small">Teléfono oculto por Facebook; escribir por mensaje</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1628501838930259/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="13">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="13">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>Sabaneta – María Auxiliadora (frente al Mall María Auxiliadora)<br><span class="tag tag-ok">Céntrico</span><div class="small">Zona de comercio y supermercados, cerca de Av. Las Vegas / Cl. 75 Sur; confirmar dirección exacta con el anunciante</div></td>
+                        <td>$1.850.000</td>
+                        <td>3 / 2 (cabinados)</td>
+                        <td>55 m²</td>
+                        <td>Nuevo, sala-comedor, cocina integral, zona de ropas, ventanal. Zonas comunes en construcción. Parqueadero público (el que llegue primero). Publica "Gestionamos".</td>
+                        <td><span class="small">Sin teléfono en la publicación</span></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1577320473869004/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="14">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="14">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>Sabaneta – sector sin especificar<br><span class="tag tag-warn">Zona por confirmar</span><div class="small">La publicación solo dice "sector de Sabaneta"; preguntar la dirección antes de visitar</div></td>
+                        <td>$1.800.000</td>
+                        <td>3 / 2</td>
+                        <td>~60 m²</td>
+                        <td>3 closets, sala-comedor, cocina integral, barra americana, zona de ropas, <strong>sin parqueadero</strong>. Unidad cerrada, portería 24 h, ascensor, salón social, piscina. Acepta perros y gatos. Publica Impacto Inmobiliario (Yeniffer Quiroz).</td>
+                        <td><span class="tel">322 2232</span><br><span class="tel">319 620 9486</span> <span class="small">(WhatsApp)</span><div class="small">COD-526338</div></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2064789551066526/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="15">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="15">☐</span></td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>Sabaneta – María Auxiliadora, Unidad Buena Vista<br><span class="tag tag-warn">Posible loma · revisar</span><div class="small">En Maps, Buenavista Apartamentos queda en Cl. 58 Sur #35-121, unas 13 carreras al oriente de Av. Las Vegas (Cra. 48), en la parte alta; la publicación habla de "clima fresco"</div></td>
+                        <td>$2.000.000</td>
+                        <td>2 / 2</td>
+                        <td>54 m²</td>
+                        <td>Piso 31, 2 closets, cocina semi integral, balcón, agua caliente con calentador, parqueadero, ascensor, portería 24 h. Acceso pavimentado. Código de la inmobiliaria: 11377.</td>
+                        <td><span class="tel">Cód. 11377</span><div class="small">Sin teléfono; dejar nombre y celular por mensaje</div></td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2104783410123249/" target="_blank">ver</a></td>
+                        <td><select class="estado" data-id="16">
+                            <option>Por contactar</option>
+                            <option>Contactado</option>
+                            <option>Visita agendada</option>
+                            <option>Visitado</option>
+                            <option>Interesado</option>
+                            <option>Descartado</option>
+                            <option>Ya arrendado</option>
+                        </select></td>
+                        <td><span class="checkbox" data-id="16">☐</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🚫 Descartados (para que no los revises de nuevo)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Precio</th>
+                        <th>Anuncio</th>
+                        <th>Motivo</th>
+                        <th>Enlace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>$1.900.000</td>
+                        <td>3 alcobas / 1 baño, unidad cerrada</td>
+                        <td>Está en Bello, no en Envigado ni Sabaneta</td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1619036406399245/" target="_blank">ver</a></td>
+                    </tr>
+                    <tr>
+                        <td>$1.700.000</td>
+                        <td>Apartamento 2.º piso, 2 alcobas, Cristo Rey</td>
+                        <td>Medellín (Cl. 4 Sur con Cra. 51, cerca de Av. Guayabal); sin parqueadero</td>
+                        <td><a href="https://www.facebook.com/marketplace/item/2020514535180813/" target="_blank">ver</a></td>
+                    </tr>
+                    <tr>
+                        <td>$1.500.000</td>
+                        <td>2 alcobas / 1 baño, 45 m², Buenos Aires</td>
+                        <td>Medellín, fuera de la zona pedida</td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1414029637548182/" target="_blank">ver</a></td>
+                    </tr>
+                    <tr>
+                        <td>$1.600.000</td>
+                        <td>Habitación amoblada en Sabaneta</td>
+                        <td>Es una habitación amoblada, no un apartamento</td>
+                        <td><a href="https://www.facebook.com/marketplace/item/1000776459442228/" target="_blank">ver</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>💡 Cómo usar</h2>
+            <ul>
+                <li><strong>Agendado (☐/☑):</strong> haz click para marcar/desmarcar visitas agendadas</li>
+                <li><strong>Estado:</strong> elige el estado actual del arriendo en el desplegable</li>
+                <li><strong>Los cambios se guardan automáticamente</strong> y se comparten con todos los que usen este enlace</li>
+                <li>Haz clic en "ver" para abrir el anuncio en Facebook Marketplace</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>❓ Preguntas para los anunciantes</h2>
+            <ol>
+                <li>¿Sigue disponible y desde qué fecha?</li>
+                <li>¿Se entrega sin amoblar? ¿Cocina integral y calentador?</li>
+                <li>¿Incluye parqueadero? ¿Cuál es el costo de administración?</li>
+                <li>¿Cuál es la dirección o barrio exacto? (sobre todo en el #15 y el #16)</li>
+                <li>¿Qué piso y hay ascensor?</li>
+                <li>¿Qué piden para firmar? ¿Comisión de inmobiliaria?</li>
+                <li>¿Aceptan mascotas?</li>
+                <li>En cesiones: ¿cuándo vence el contrato y cuánto sube en renovación?</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const THEME_KEY = 'arriendos_theme';
+            const btn = document.getElementById('theme-toggle');
+            const root = document.documentElement;
+
+            function applyTheme(theme) {
+                if (theme) {
+                    root.setAttribute('data-theme', theme);
+                } else {
+                    root.removeAttribute('data-theme');
+                }
+                const isDark = theme === 'dark' ||
+                    (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                btn.textContent = isDark ? '☀️ Claro' : '🌙 Oscuro';
+            }
+
+            let saved = null;
+            try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+            applyTheme(saved);
+
+            btn.addEventListener('click', () => {
+                const isDark = root.getAttribute('data-theme') === 'dark' ||
+                    (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const next = isDark ? 'light' : 'dark';
+                applyTheme(next);
+                try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+            });
+        })();
+    </script>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@neondatabase/neon-js@0.7.0-beta';
+
+        const client = createClient(
+            'https://ep-cool-waterfall-b5anwj0w.c-7.us-east-2.aws.neon.tech/neondb',
+            { auth: { allowAnonymous: true } }
+        );
+
+        function updateStats() {
+            const checkboxes = document.querySelectorAll('.checkbox');
+            let count = 0;
+            checkboxes.forEach(cb => {
+                if (cb.textContent.trim() === '☑') count++;
+            });
+            document.getElementById('count-agendadas-1').textContent = count;
+        }
+
+        async function loadState() {
+            const { data, error } = await client.from('listings_state').select('*');
+            if (error) {
+                console.error('Error cargando estado:', error);
+                return;
+            }
+            data.forEach(row => {
+                const checkbox = document.querySelector(`.checkbox[data-id="${row.listing_id}"]`);
+                if (checkbox) checkbox.textContent = row.agendado ? '☑' : '☐';
+
+                const select = document.querySelector(`.estado[data-id="${row.listing_id}"]`);
+                if (select) select.value = row.estado;
+            });
+            updateStats();
+        }
+
+        document.querySelectorAll('.checkbox').forEach(checkbox => {
+            checkbox.addEventListener('click', async () => {
+                const id = checkbox.getAttribute('data-id');
+                const agendado = checkbox.textContent.trim() !== '☑';
+                checkbox.textContent = agendado ? '☑' : '☐';
+                updateStats();
+
+                const { error } = await client
+                    .from('listings_state')
+                    .update({ agendado, updated_at: new Date().toISOString() })
+                    .eq('listing_id', Number(id));
+                if (error) console.error('Error guardando:', error);
+            });
+        });
+
+        document.querySelectorAll('.estado').forEach(select => {
+            select.addEventListener('change', async () => {
+                const id = select.getAttribute('data-id');
+                const { error } = await client
+                    .from('listings_state')
+                    .update({ estado: select.value, updated_at: new Date().toISOString() })
+                    .eq('listing_id', Number(id));
+                if (error) console.error('Error guardando:', error);
+            });
+        });
+
+        loadState();
+    </script>
+</body>
+</html>
